@@ -3,7 +3,6 @@ using CurrenciesTaskApi.Data.Models;
 using CurrenciesTaskApi.Data.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using RestSharp;
 
 namespace CurrenciesTaskApi.Controllers
 {

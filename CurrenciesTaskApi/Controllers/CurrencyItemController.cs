@@ -16,52 +16,55 @@ namespace CurrenciesTaskApi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddRecord(string CurrencyCode, string RateDate)
+        public async Task<IActionResult> AddRecord(string CurrencyCode, DateTime RateDateFrom, DateTime RateDateTo)
         {
-            var currencyOndate = new Currencies_Ondate();
-            var client = new HttpClient();
-            var request = new HttpRequestMessage
+            for (DateTime RateDate = RateDateFrom; RateDate <= RateDateTo; RateDate = RateDate.AddDays(1))
             {
-                Method = HttpMethod.Get,
-                RequestUri = new Uri($"https://www.nbrb.by/api/exrates/rates/{CurrencyCode}?parammode=2&ondate={RateDate}"),
-            };
-            using (var response = await client.SendAsync(request))
-            {
-                if (response.IsSuccessStatusCode)
+                var currencyOndate = new Currencies_Ondate();
+                var client = new HttpClient();
+                var request = new HttpRequestMessage
                 {
-                    var body = await response.Content.ReadAsStringAsync();
-                    currencyOndate = JsonConvert.DeserializeObject<Currencies_Ondate>(body);
-                    logger.LogInformation($"Success request. CurrencyCode = {CurrencyCode} and RateDate = {RateDate}. Adding record to database...");
-                }
-                else
+                    Method = HttpMethod.Get,
+                    RequestUri = new Uri($"https://www.nbrb.by/api/exrates/rates/{CurrencyCode}?parammode=2&ondate={RateDate.ToString("yyyy-MM-dd")}"),
+                };
+                using (var response = await client.SendAsync(request))
                 {
-                    logger.LogWarning($"Bad request. Attempt to send another request with the current date");
-                    var innerRequest = new HttpRequestMessage
+                    if (response.IsSuccessStatusCode)
                     {
-                        Method = HttpMethod.Get,
-                        RequestUri = new Uri($"https://www.nbrb.by/api/exrates/rates/{CurrencyCode}?parammode=2"),
-                    };
-                    using (var innerResponse = await client.SendAsync(innerRequest))
+                        var body = await response.Content.ReadAsStringAsync();
+                        currencyOndate = JsonConvert.DeserializeObject<Currencies_Ondate>(body);
+                        logger.LogInformation($"Success request. CurrencyCode = {CurrencyCode} and RateDate = {RateDate}. Adding record to database...");
+                    }
+                    else
                     {
-                        if (innerResponse.IsSuccessStatusCode)
+                        logger.LogWarning($"Bad request. Attempt to send another request with the current date");
+                        var innerRequest = new HttpRequestMessage
                         {
-                            var body = await innerResponse.Content.ReadAsStringAsync();
-                            currencyOndate = JsonConvert.DeserializeObject<Currencies_Ondate>(body);
-                            logger.LogInformation($"Success request. CurrencyCode = {CurrencyCode} and RateDate = {DateTime.Now}. Adding record to database...");
-                        }
-                        else
+                            Method = HttpMethod.Get,
+                            RequestUri = new Uri($"https://www.nbrb.by/api/exrates/rates/{CurrencyCode}?parammode=2"),
+                        };
+                        using (var innerResponse = await client.SendAsync(innerRequest))
                         {
+                            if (innerResponse.IsSuccessStatusCode)
+                            {
+                                var body = await innerResponse.Content.ReadAsStringAsync();
+                                currencyOndate = JsonConvert.DeserializeObject<Currencies_Ondate>(body);
+                                logger.LogInformation($"Success request. CurrencyCode = {CurrencyCode} and RateDate = {DateTime.Now}. Adding record to database...");
+                            }
+                            else
+                            {
 
-                            logger.LogError($"404. Cannot find this resource on API. Please, try to update currencies");
-                            return RedirectToAction("Index", "CurrencyList");
+                                logger.LogError($"404. Cannot find this resource on API. Please, try to update currencies");
+                                return RedirectToAction("Index", "CurrencyList");
+                            }
                         }
                     }
-                }
 
+                }
+                currencyOndate.GUID = Guid.NewGuid().ToString();
+                currencyOndate.CODE = CurrencyCode;
+                await currencyRepository.AddRecord(currencyOndate);
             }
-            currencyOndate.GUID = Guid.NewGuid().ToString();
-            currencyOndate.CODE = CurrencyCode;
-            await currencyRepository.AddRecord(currencyOndate);
             return RedirectToAction("Index", "CurrencyList");
         }
 
