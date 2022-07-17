@@ -48,7 +48,7 @@
                             @{
                                 foreach (var record in Model.Currencies)
                                 {
-                                                                    <option value="@record.Cur_Abbreviation">@record.Cur_Name</option>
+                                                                                        <option value="@record.Cur_Abbreviation">@record.Cur_Name</option>
                                 }
                             }
 
@@ -57,19 +57,21 @@
             </div>
 
             <div class="mb-3 row">
-                <label class="col-form-label col-sm-2">From:</label>
+                <label class="col-form-label col-sm-2" id = "DateFromLabel">From:</label>
                 <div class="col-md-5">
                     <input type="date" id="DateFrom" name="RateDateFrom" class="form-control" onchange="OnDateFromChange (this)" />
                 </div>
             </div>
 
-            <div class="mb-3 row">
-                <label class="col-form-label col-sm-2">To:</label>
+            
+            <div class="mb-3 row" sstyle="visibility-hidden">
+                
+                <label class="col-form-label col-sm-2" id = "DateToLabel">To:</label>
                 <div class="col-md-5">
                     <input type="date" id="DateTo" name="RateDateTo" class="form-control" onchange="OnDateToChange (this)"/>
                 </div>
             </div>
-
+            <button class="btn btn-secondary" onclick="buttonClick (this)" type="button">Select a range</button>
             <button class="btn btn-secondary" type="submit">Submit</button>
         </form>
         } else { <a class="btn btn-secondary" asp-controller="CurrencyList" asp-action="Update">Update Currencies</a>}
@@ -104,20 +106,20 @@
                         @{
                             foreach (var record in Model.Ondates)
                             {
-                                                 <tr>
-                                                    <th>
-                                                        @record.CODE
-                                                     </th> 
-                                                    <th>
-                                                        @record.Cur_OfficialRate
-                                                    </th> 
-                                                    <th>
-                                                        @record.Date.ToString("dd.MM.yyyy")
-                                                    </th> 
-                                                    <th>
-                                                        <a class="nav-link active" asp-controller="CurrencyItem" asp-action="RemoveRecord" asp-route-Guid="@record.GUID"> Remove </a>
-                                                    </th> 
-                                                </tr>
+                                                                     <tr>
+                                                                        <th>
+                                                                            @record.CODE
+                                                                         </th> 
+                                                                        <th>
+                                                                            @record.Cur_OfficialRate
+                                                                        </th> 
+                                                                        <th>
+                                                                            @record.Date.ToString("dd.MM.yyyy")
+                                                                        </th> 
+                                                                        <th>
+                                                                            <a class="nav-link active" asp-controller="CurrencyItem" asp-action="RemoveRecord" asp-route-Guid="@record.GUID"> Remove </a>
+                                                                        </th> 
+                                                                    </tr>
                             }
                         }
                     </tbody>
@@ -130,6 +132,13 @@
 </html>
 
 <script>
+        var DateToElement = document.getElementById("DateTo");
+        DateToElement.style.visibility = 'hidden';
+        var DateToLabel = document.getElementById("DateToLabel");
+        DateToLabel.style.visibility = 'hidden';
+        var DateFromLabel = document.getElementById("DateFromLabel");
+        DateFromLabel.innerHTML = 'Rate Date:';
+        
         function OnDateFromChange (dateFrom) {
             var DateToElement = document.getElementById("DateTo");
             DateToElement.min = dateFrom.value;
@@ -139,5 +148,16 @@
         function OnDateToChange (dateTo) {
             var DateFromElement = document.getElementById("DateFrom");
             DateFromElement.max = dateTo.value;
+        }
+
+        function buttonClick(button) {
+            button.style.visibility = 'hidden';
+            button.remove();
+            var DateToElement = document.getElementById("DateTo");
+            DateToElement.style.visibility = 'visible';
+            var DateToLabel = document.getElementById("DateToLabel");
+            DateToLabel.style.visibility = 'visible';
+            var DateFromLabel = document.getElementById("DateFromLabel");
+            DateFromLabel.innerHTML = 'From:';
         }
 </script>
